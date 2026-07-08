@@ -41,11 +41,7 @@ bool HotReloader::launchEmu() {
 }
 
 bool HotReloader::waitEmuExit() {
-    HANDLE waitHandle = mRunningEmuHandle.is_valid()
-        ? mRunningEmuHandle.get()
-        : mEmuProcess.hProcess;
-
-    WaitForSingleObject(waitHandle, INFINITE);
+    WaitForSingleObject(this->getCurrentHandle(), INFINITE);
 
     mEmuProcess.reset();
     mRunningEmuHandle.reset();
@@ -53,20 +49,32 @@ bool HotReloader::waitEmuExit() {
     return true;
 }
 
-bool HotReloader::copyModToSd() const {
+bool HotReloader::backupMod() const {
+    std::filesystem::path backupPath = mConfig->modPath();
+    backupPath.replace_filename("backup");
+
+    return backupDir(mConfig->modPath(), backupPath, sCopyOptions);
+}
+
+bool HotReloader::copyModFromSd() const {
+    if (!clearDirectory(mConfig->modPath())) {
+        return false;
+    }
+
     std::error_code ec;
-    std::filesystem::remove_all(mConfig->sdPath(), ec);
-    std::filesystem::copy(mConfig->modPath(), mConfig->sdPath(), sCopyOptions, ec);
+    std::filesystem::copy(mConfig->sdPath(), mConfig->modPath(), sCopyOptions, ec);
 
     return !ec;
 }
 
-bool HotReloader::restoreModFromSd() const {
-    std::error_code ec;
-    std::filesystem::remove_all(mConfig->modPath(), ec);
-    std::filesystem::copy(mConfig->sdPath(), mConfig->modPath(), sCopyOptions, ec);
+bool HotReloader::closeEmu() const {
+    return TerminateProcess(this->getCurrentHandle(), 1);
+}
 
-    return !ec;
+HANDLE HotReloader::getCurrentHandle() const {
+    return mRunningEmuHandle.is_valid()
+       ? mRunningEmuHandle.get()
+       : mEmuProcess.hProcess;
 }
 
 }

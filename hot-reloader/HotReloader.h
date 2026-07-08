@@ -8,13 +8,14 @@ namespace ml {
 
 class HotReloader {
 public:
-    HotReloader();
+    explicit HotReloader();
 
     bool tryAttachToEmu();
     bool launchEmu();
     bool waitEmuExit();
-    bool copyModToSd() const;
-    bool restoreModFromSd() const;
+    bool backupMod() const;
+    bool copyModFromSd() const;
+    bool closeEmu() const;
 
     const Config& getConfig() const { return *mConfig; }
 
@@ -22,6 +23,8 @@ private:
     std::unique_ptr<Config> mConfig;
     wil::unique_handle mRunningEmuHandle; // emu handle if it's already running
     wil::unique_process_information mEmuProcess; // emu process info if created by the hot reloader
+
+    HANDLE getCurrentHandle() const;
 };
 
 }

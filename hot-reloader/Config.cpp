@@ -4,16 +4,18 @@
 #include <fstream>
 #include <iostream>
 
+#include "Util.h"
+
 namespace ml {
 
-void Config::load(const std::string& fileName) {
+bool Config::load(const std::string& fileName) {
     std::filesystem::path currentPath = std::filesystem::current_path();
 
     currentPath.append(fileName);
 
     std::ifstream file = std::ifstream(currentPath);
     if (!file.is_open()) {
-        return;
+        return false;
     }
 
     std::string line;
@@ -34,6 +36,16 @@ void Config::load(const std::string& fileName) {
             mSdPath = std::move(value);
         }
     }
+
+    return this->isValid();
+}
+
+std::string Config::toString() const {
+    return std::format("emu={}\nmod={}\nsd={}", mEmuPath, mModPath, mSdPath);
+}
+
+bool Config::isValid() const {
+    return isExistPath(mEmuPath) && isExistPath(mModPath) && isExistPath(mSdPath);
 }
 
 }
