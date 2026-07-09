@@ -6,9 +6,13 @@
 
 #include "Util.h"
 
+#undef min
+
 namespace ml {
 
 static constexpr uint32_t DefaultBackupDepth = 3;
+static constexpr uint32_t MaxBackupDepth = 10;
+static constexpr uint32_t MinBackupDepth = 1;
 
 Config::Config() {
     mBackupDepth = DefaultBackupDepth;
@@ -41,7 +45,7 @@ bool Config::load(const std::string& fileName) {
         } else if (key == "sd_path") {
             mSdPath = std::move(value);
         } else if (key == "backup_depth") {
-            mBackupDepth = toUInt32(value, DefaultBackupDepth);
+            mBackupDepth = std::clamp(ml::toUInt32(value, DefaultBackupDepth), MinBackupDepth, MaxBackupDepth);
         }
     }
 
@@ -53,7 +57,7 @@ std::string Config::toString() const {
 }
 
 bool Config::isValid() const {
-    return isExistPath(mEmuPath) && isExistPath(mModPath) && isExistPath(mSdPath);
+    return ml::isExistPath(mEmuPath) && ml::isExistPath(mModPath) && ml::isExistPath(mSdPath);
 }
 
 }

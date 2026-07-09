@@ -46,48 +46,13 @@ uint32_t toUInt32(const std::string &str, uint32_t fallback) {
     }
 }
 
-bool backupDir(const std::filesystem::path& path, const std::filesystem::path& backupPath, std::filesystem::copy_options options) {
-    if (isExistPath(backupPath)) {
-        if (!clearDirectory(backupPath)) {
-            return false;
-        }
-    } else {
-        std::filesystem::create_directory(backupPath);
-    }
-
-    std::error_code ec;
-    std::filesystem::path backupCan = std::filesystem::weakly_canonical(backupPath, ec);
-
-    for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(path, ec)) {
-        if (ec) {
-            return false;
-        }
-
-        std::filesystem::path entryPathCan = std::filesystem::weakly_canonical(entry.path(), ec);
-        if (entryPathCan == backupCan) {
-            continue; // skip backing up the back-up directory
-        }
-
-        std::filesystem::copy(entry.path(), backupPath / entry.path().filename(), options, ec);
-        if (ec) {
-            return false;
-        }
-    }
-
-    return !ec;
-}
-
 bool ensureDirCreated(const std::filesystem::path &path) {
     std::error_code ec;
-    if (!std::filesystem::exists(path, ec)) {
-        std::filesystem::create_directory(path, ec);
-
-        if (ec) {
-            return false;
-        }
+    if (std::filesystem::exists(path, ec)) {
+        return true;
     }
 
-    return true;
+    return std::filesystem::create_directory(path, ec);
 }
 
 bool clearDirectory(const std::filesystem::path &path) {

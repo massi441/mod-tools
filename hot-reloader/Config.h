@@ -14,7 +14,7 @@ public:
     const std::string& emuPath() const { return mEmuPath; }
     const std::string& modPath() const { return mModPath; }
     const std::string& sdPath() const { return mSdPath; }
-    const std::vector<std::string>& folders() const { return mFolders; }
+    uint32_t backupDepth() const { return mBackupDepth; }
 
     std::string toString() const;
 
@@ -25,7 +25,6 @@ private:
     std::string mModPath;
     std::string mSdPath;
     uint32_t mBackupDepth;
-    std::vector<std::string> mFolders;
 };
 
 }

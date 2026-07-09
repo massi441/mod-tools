@@ -17,9 +17,9 @@ HotReloader::HotReloader() {
 
 bool HotReloader::tryAttachToEmu() {
     std::filesystem::path path = mConfig->emuPath();
-    std::wstring emuW = toWString(path.filename().string());
+    std::wstring emuW = ml::toWString(path.filename().string());
 
-    mAttachedEmuHandle = findProcess(emuW);
+    mAttachedEmuHandle = ml::findProcess(emuW);
 
     return mAttachedEmuHandle.is_valid();
 }
@@ -68,14 +68,47 @@ bool HotReloader::waitEmuExit() {
 }
 
 bool HotReloader::backupMod() const {
-    std::filesystem::path backupPath = mConfig->modPath();
-    backupPath.replace_filename("backup");
+    std::filesystem::path backupsPath = mConfig->modPath();
+    backupsPath.replace_filename("backups");
 
-    return backupDir(mConfig->modPath(), backupPath, sCopyOptions);
+    std::error_code ec;
+    if (ml::isExistPath(backupsPath)) {
+        std::filesystem::path maxBackupPath = backupsPath / std::to_string(mConfig->backupDepth());
+
+        if (ml::isExistPath(maxBackupPath)) {
+            std::filesystem::remove_all(maxBackupPath, ec);
+
+            if (ec) {
+                return false;
+            }
+        }
+
+        for (uint32_t i = mConfig->backupDepth() - 1; i > 0; i--) {
+            std::filesystem::path backupPath = backupsPath / std::to_string(i);
+            std::filesystem::path newBackupPath = backupsPath / std::to_string(i + 1);
+
+            if (!ml::isExistPath(backupPath)) {
+                continue;
+            }
+
+            std::filesystem::rename(backupPath, newBackupPath, ec);
+
+            if (ec) {
+                return false;
+            }
+        }
+    } else if (!std::filesystem::create_directory(backupsPath, ec)) {
+        return false;
+    }
+
+    std::filesystem::path newestBackupPath = backupsPath / std::to_string(1);
+    std::filesystem::copy(mConfig->modPath(), newestBackupPath, sCopyOptions, ec);
+
+    return !ec;
 }
 
 bool HotReloader::copyModFromSd() const {
-    if (!clearDirectory(mConfig->modPath())) {
+    if (!ml::clearDirectory(mConfig->modPath())) {
         return false;
     }
 
