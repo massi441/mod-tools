@@ -107,14 +107,6 @@ bool HotReloader::backupMod() const {
     return !ec;
 }
 
-bool HotReloader::removeLastBackup() const {
-
-}
-
-bool HotReloader::shiftBackups() const {
-
-}
-
 bool HotReloader::copyModFromSd() const {
     if (!ml::clearDirectory(mConfig->modPath())) {
         return false;
