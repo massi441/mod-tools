@@ -8,6 +8,12 @@
 
 namespace ml {
 
+static constexpr uint32_t DefaultBackupDepth = 3;
+
+Config::Config() {
+    mBackupDepth = DefaultBackupDepth;
+}
+
 bool Config::load(const std::string& fileName) {
     std::filesystem::path currentPath = std::filesystem::current_path();
 
@@ -28,12 +34,14 @@ bool Config::load(const std::string& fileName) {
         std::string key = line.substr(0, equalSign);
         std::string value = line.substr(equalSign + 1);
 
-        if (key == "emuPath") {
+        if (key == "emu_path") {
             mEmuPath = std::move(value);
-        } else if (key == "modPath") {
+        } else if (key == "mod_path") {
             mModPath = std::move(value);
-        } else if (key == "sdPath") {
+        } else if (key == "sd_path") {
             mSdPath = std::move(value);
+        } else if (key == "backup_depth") {
+            mBackupDepth = toUInt32(value, DefaultBackupDepth);
         }
     }
 

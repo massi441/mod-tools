@@ -38,6 +38,14 @@ std::wstring toWString(const std::string& str) {
     return ws;
 }
 
+uint32_t toUInt32(const std::string &str, uint32_t fallback) {
+    try {
+        return std::stoi(str);
+    } catch (...) {
+        return fallback;
+    }
+}
+
 bool backupDir(const std::filesystem::path& path, const std::filesystem::path& backupPath, std::filesystem::copy_options options) {
     if (isExistPath(backupPath)) {
         if (!clearDirectory(backupPath)) {
@@ -57,7 +65,7 @@ bool backupDir(const std::filesystem::path& path, const std::filesystem::path& b
 
         std::filesystem::path entryPathCan = std::filesystem::weakly_canonical(entry.path(), ec);
         if (entryPathCan == backupCan) {
-            continue; // skip backing up the back up directory
+            continue; // skip backing up the back-up directory
         }
 
         std::filesystem::copy(entry.path(), backupPath / entry.path().filename(), options, ec);

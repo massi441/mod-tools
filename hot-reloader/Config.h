@@ -7,6 +7,8 @@ namespace ml {
 
 class Config {
 public:
+    Config();
+
     bool load(const std::string& fileName = "config.txt");
 
     const std::string& emuPath() const { return mEmuPath; }
@@ -22,6 +24,7 @@ private:
     std::string mEmuPath;
     std::string mModPath;
     std::string mSdPath;
+    uint32_t mBackupDepth;
     std::vector<std::string> mFolders;
 };
 

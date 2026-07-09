@@ -70,8 +70,5 @@ int main() {
 
     std::cout << "Mod successfully restored from sd card, hot reloader is closing..." << std::endl;
 
-    std::string line;
-    std::getline(std::cin, line);
-
     return 0;
 }
