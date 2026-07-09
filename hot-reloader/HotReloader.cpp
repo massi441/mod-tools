@@ -94,10 +94,6 @@ bool HotReloader::backupMod() const {
             }
 
             std::filesystem::rename(backupPath, newBackupPath, ec);
-
-            if (ec) {
-                return false;
-            }
         }
     } else if (!std::filesystem::create_directory(backupsPath, ec)) {
         return false;
