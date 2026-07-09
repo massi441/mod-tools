@@ -12,15 +12,16 @@ static constexpr std::filesystem::copy_options sCopyOptions =
 HotReloader::HotReloader() {
     mConfig = std::make_unique<Config>();
     mConfig->load();
+    mShutdownEvent = wil::unique_event(wil::EventOptions::ManualReset);
 }
 
 bool HotReloader::tryAttachToEmu() {
     std::filesystem::path path = mConfig->emuPath();
     std::wstring emuW = toWString(path.filename().string());
 
-    mRunningEmuHandle = findProcess(emuW);
+    mAttachedEmuHandle = findProcess(emuW);
 
-    return mRunningEmuHandle.is_valid();
+    return mAttachedEmuHandle.is_valid();
 }
 
 bool HotReloader::launchEmu() {
@@ -41,10 +42,27 @@ bool HotReloader::launchEmu() {
 }
 
 bool HotReloader::waitEmuExit() {
-    WaitForSingleObject(this->getCurrentHandle(), INFINITE);
+    HANDLE waitHandles[] = { getCurrentHandle(), mShutdownEvent.get() };
+    DWORD waitObject = WaitForMultipleObjects(std::size(waitHandles), waitHandles, false, INFINITE );
+
+    if (waitObject == WAIT_FAILED) {
+        return false;
+    }
+
+    // if the wait was complete because of a shutdown
+    if (waitObject == WAIT_OBJECT_0 + 1)  {
+        if (!this->closeEmu()) {
+            return false;
+        }
+
+        if (WaitForSingleObject(this->getCurrentHandle(), INFINITE) == WAIT_FAILED) {
+            return false;
+        }
+    }
 
     mEmuProcess.reset();
-    mRunningEmuHandle.reset();
+    mAttachedEmuHandle.reset();
+    mShutdownEvent.ResetEvent();
 
     return true;
 }
@@ -67,13 +85,17 @@ bool HotReloader::copyModFromSd() const {
     return !ec;
 }
 
+void HotReloader::requestEmuShutdown() const {
+    mShutdownEvent.SetEvent();
+}
+
 bool HotReloader::closeEmu() const {
     return TerminateProcess(this->getCurrentHandle(), 1);
 }
 
 HANDLE HotReloader::getCurrentHandle() const {
-    return mRunningEmuHandle.is_valid()
-       ? mRunningEmuHandle.get()
+    return mAttachedEmuHandle.is_valid()
+       ? mAttachedEmuHandle.get()
        : mEmuProcess.hProcess;
 }
 

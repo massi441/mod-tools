@@ -1,47 +1,45 @@
-#include <iostream>
 #include "HotReloader.h"
 
+#include <iostream>
+#include <semaphore>
+
 static ml::HotReloader hotReloader = ml::HotReloader();
-static std::atomic<bool> isRunning = false;
+static std::binary_semaphore closeSem = std::binary_semaphore(0);
 
 BOOL WINAPI ConsoleCloseHandler(DWORD) {
-    if (isRunning) {
-        std::cout << "Intercepted shutdown, restoring files from sd folder" << std::endl;
-        if (hotReloader.copyModFromSd()) {
-            std::cout << "Successfully restored from sd folder, shutting down..." << std::endl;
-        } else {
-            std::cout << "Failed to restore from sd folder" << std::endl;
-        }
+    std::cout << "Intercepted shutdown, emulator will be closed..." << std::endl;
 
-        if (hotReloader.closeEmu()) {
-            std::cout << "Successfully closed emulator" << std::endl;
-        } else {
-            std::cerr << "Failed to close emulator during shutdown" << std::endl;
-        }
-
-        isRunning = false;
-    }
+    hotReloader.requestEmuShutdown();
+    closeSem.acquire();
+    closeSem.release();
 
     return FALSE;
 }
 
 int main() {
-    SetConsoleCtrlHandler(ConsoleCloseHandler, TRUE);
+    if (!SetConsoleCtrlHandler(ConsoleCloseHandler, TRUE)) {
+        std::cout << "Failed to set console handler" << std::endl;
+        return 1;
+    }
 
     const ml::Config& config = hotReloader.getConfig();
     if (!config.isValid()) {
-        std::cerr << "Failed to initialize config: \n" << config.toString() << std::endl;
+        std::cerr << "Failed to initialize config, one of the following paths was not found: \n" << config.toString() << std::endl;
         return 1;
     }
 
     std::cout << "Launching hot reloader for: " << config.emuPath() << std::endl;
 
-    if (!hotReloader.tryAttachToEmu() && !hotReloader.launchEmu()) {
-        std::cout << "Launched emulator successfully" << std::endl;
+    if (hotReloader.tryAttachToEmu()) {
+        std::cout << "Successfully attached to emulator" << std::endl;
+    } else if (hotReloader.launchEmu()) {
+        std::cout << "Successfully launcher emulator" << std::endl;
+    } else {
+        std::cerr << "Failed to attach/launch emulator" << std::endl;
         return 1;
     }
 
-    std::cout << "Hot reloader initialized, backing up mod and copying files from sd card..." << std::endl;
+    std::cout << "Backing up mod and copying files from sd card..." << std::endl;
 
     if (!hotReloader.backupMod()) {
         std::cout << "Failed to backup mod from sd folder" << std::endl;
@@ -53,8 +51,6 @@ int main() {
         return 1;
     }
 
-    isRunning = true;
-
     std::cout << "Copied files from sd card, waiting for emulator to be shutdown..." << std::endl;
 
     if (!hotReloader.waitEmuExit()) {
@@ -65,11 +61,14 @@ int main() {
     std::cout << "Emulator shutdown successfully, restoring files from sd card" << std::endl;
 
     if (!hotReloader.copyModFromSd()) {
+        closeSem.release(); // avoids a deadlock in case an error happens
         std::cerr << "Failed to restore from sd folder" << std::endl;
         return 1;
     }
 
-    isRunning = false;
+    closeSem.release();
+
+    std::cout << "Mod successfully restored from sd card, hot reloader is closing..." << std::endl;
 
     std::string line;
     std::getline(std::cin, line);

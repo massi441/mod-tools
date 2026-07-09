@@ -13,12 +13,3 @@ deploy/
 .vscode/settings.json
 compile_commands.json
 .vs
-
-.claude/
-archive/
-backup/
-re/
-
-CMakePresets.json
-debug.txt
-disassemble.txt

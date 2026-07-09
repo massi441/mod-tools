@@ -8,12 +8,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(wil CONFIG REQUIRED)
 find_package(utf8cpp CONFIG REQUIRED)
 
-add_executable(mod_hot_reloader
+add_executable(hot_reloader
     main.cpp
     HotReloader.cpp
     Config.cpp
     Util.cpp
 )
 
-target_link_libraries(mod_hot_reloader PRIVATE WIL::WIL)
-target_link_libraries(mod_hot_reloader PRIVATE utf8cpp::utf8cpp)
+target_link_libraries(hot_reloader PRIVATE WIL::WIL)
+target_link_libraries(hot_reloader PRIVATE utf8cpp::utf8cpp)
