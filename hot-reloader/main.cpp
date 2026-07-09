@@ -17,6 +17,8 @@ BOOL WINAPI ConsoleCloseHandler(DWORD) {
 }
 
 int main() {
+    ShowWindow(GetConsoleWindow(), SW_SHOWMINNOACTIVE);
+
     if (!SetConsoleCtrlHandler(ConsoleCloseHandler, TRUE)) {
         std::cout << "Failed to set console handler" << std::endl;
         return 1;
