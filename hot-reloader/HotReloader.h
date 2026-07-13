@@ -4,7 +4,7 @@
 #include <wil/resource.h>
 #include "Config.h"
 
-namespace ml {
+namespace ml::hot_reload {
 
 class HotReloader {
 public:

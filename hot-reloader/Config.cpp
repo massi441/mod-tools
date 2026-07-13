@@ -1,4 +1,4 @@
-#include "Config.h"
+#include "HotReloadConfig.h"
 
 #include <filesystem>
 #include <fstream>
@@ -8,7 +8,7 @@
 
 #undef min
 
-namespace ml {
+namespace ml::hot_reload {
 
 static constexpr uint32_t DefaultBackupDepth = 3;
 static constexpr uint32_t MaxBackupDepth = 10;
@@ -19,11 +19,11 @@ Config::Config() {
 }
 
 bool Config::load(const std::string& fileName) {
-    std::filesystem::path currentPath = std::filesystem::current_path();
+    std::filesystem::path configPath = std::filesystem::current_path();
 
-    currentPath.append(fileName);
+    configPath.append(fileName);
 
-    std::ifstream file = std::ifstream(currentPath);
+    std::ifstream file = std::ifstream(configPath);
     if (!file.is_open()) {
         return false;
     }

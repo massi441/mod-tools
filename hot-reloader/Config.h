@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace ml {
+namespace ml::hot_reload {
 
 class Config {
 public:

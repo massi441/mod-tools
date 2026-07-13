@@ -5,7 +5,9 @@
 
 #include "Util.h"
 
-static ml::HotReloader hotReloader = ml::HotReloader();
+using namespace ml;
+
+static hot_reload::HotReloader hotReloader = hot_reload::HotReloader();
 static std::binary_semaphore closeSem = std::binary_semaphore(0);
 
 BOOL WINAPI ConsoleCloseHandler(DWORD) {
@@ -19,7 +21,7 @@ BOOL WINAPI ConsoleCloseHandler(DWORD) {
 }
 
 int main() {
-    if (ml::findProcessCount(ml::toWString(APP_NAME)) > 1) {
+    if (hot_reload::findProcessCount(hot_reload::toWString(APP_NAME)) > 1) {
         std::cout << "Hot reloader already opened, closing this one..." << std::endl;
         return 1;
     }
@@ -31,7 +33,7 @@ int main() {
         return 1;
     }
 
-    const ml::Config& config = hotReloader.getConfig();
+    const hot_reload::Config& config = hotReloader.getConfig();
     if (!config.isValid()) {
         std::cerr << "Failed to initialize config, one of the following paths was not found: \n" << config.toString() << std::endl;
         return 1;
