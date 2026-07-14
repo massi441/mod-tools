@@ -7,8 +7,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_subdirectory(../core ${CMAKE_CURRENT_BINARY_DIR}/core)
 
-add_executable(project_creator
+add_executable(project-creator
     main.cpp
 )
 
-target_link_libraries(project_creator PRIVATE ml_core)
+target_link_libraries(project-creator PRIVATE ml_core)
